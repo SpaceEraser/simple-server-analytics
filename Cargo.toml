@@ -1,0 +1,25 @@
+[package]
+edition = "2021"
+name = "simple-server-analytics"
+version = "0.0.1"
+
+[dependencies]
+anyhow = { version = "1", features = ["backtrace"] }
+chrono = "0"
+pin-project = "1"
+rand = "0"
+rust-embed = { version = "8", features = ["interpolate-folder-path"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0", features = [
+    "chrono",
+    "runtime-tokio-rustls",
+    "sqlite",
+] }
+tokio = { version = "1", features = ["full", "tracing"] }
+tokio-util = "0"
+tracing = "0"
+
+
+salvo = { git = "https://github.com/SpaceEraser/salvo.git" }
+simple-id = { git = "https://github.com/SpaceEraser/simple-id", version = "0.0.1" }
