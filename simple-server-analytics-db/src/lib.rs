@@ -291,7 +291,7 @@ impl ResponseTable {
                 created_at,
                 conn_id,
                 req_id,
-                elapsed,
+                duration,
                 status
             ) VALUES (?, ?, ?, ?, ?, ?)
         ",
