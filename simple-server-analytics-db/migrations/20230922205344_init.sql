@@ -14,7 +14,7 @@ CREATE TABLE "sa_request" (
     "hostname" TEXT NOT NULL,
     "path" TEXT NOT NULL,
     "user_agent" TEXT NOT NULL,
-    "method" TEXT NOT NULL,
+    "method" TEXT NOT NULL
 );
 
 CREATE TABLE "sa_response" (
@@ -22,6 +22,6 @@ CREATE TABLE "sa_response" (
     "created_at" DATETIME NOT NULL,
     "conn_id" BLOB NULL REFERENCES "connection" ("id") ON DELETE SET NULL,
     "req_id" BLOB NOT NULL REFERENCES "request" ("id") ON DELETE SET NULL,
-    "elapsed" Duration,
-    "status" u16,
+    "duration" TEXT NOT NULl,
+    "status" INT NOT NULL
 );
