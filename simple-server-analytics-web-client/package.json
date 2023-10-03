@@ -1,0 +1,29 @@
+{
+  "name": "simple-server-analytics-web-client",
+  "version": "0.0.1",
+  "description": "Web frontend for the Simple Server Analytics platform",
+  "scripts": {
+    "clean": "rimraf -I -g '../web-assets/*'",
+    "build-prod": "npm run clean && parcel build --dist-dir '../web-assets' './src/*.html'",
+    "build": "npm run clean && parcel build --no-optimize --dist-dir '../web-assets' './src/*.html'",
+    "watch": "npm run clean && parcel watch --no-hmr --dist-dir '../web-assets' './src/*.html'",
+    "serve-dev": "npm run clean && parcel serve --dist-dir '../web-assets' './src/*.html'"
+  },
+  "author": "SpaceEraser (2659641+SpaceEraser@users.noreply.github.com)",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@parcel/packager-raw-url": "2",
+    "@parcel/transformer-sass": "2",
+    "@parcel/transformer-webmanifest": "2",
+    "@types/bootstrap": "5",
+    "@types/jquery": "3",
+    "@types/js-cookie": "3",
+    "parcel": "2",
+    "rimraf": "5"
+  },
+  "dependencies": {
+    "bootstrap": "5",
+    "idb-keyval": "6",
+    "jquery": "3"
+  }
+}
