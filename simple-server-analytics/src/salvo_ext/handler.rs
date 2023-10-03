@@ -13,6 +13,12 @@ pub struct SimpleAnalyticsHandler {
     sa: SimpleAnalytics,
 }
 
+impl SimpleAnalyticsHandler {
+    pub fn new(sa: &SimpleAnalytics) -> Self {
+        Self { sa: sa.clone() }
+    }
+}
+
 #[async_trait]
 impl Handler for SimpleAnalyticsHandler {
     async fn handle(

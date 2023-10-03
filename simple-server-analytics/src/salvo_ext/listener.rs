@@ -18,40 +18,49 @@ use crate::SimpleAnalytics;
 
 use super::service::SimpleAnalyticsService;
 
-pub struct SimpleListener<T> {
+pub struct SimpleAnalyticsListener<T> {
     inner: T,
     sa: SimpleAnalytics,
 }
 
+impl<T> SimpleAnalyticsListener<T> {
+    pub fn new(inner: T, sa: &SimpleAnalytics) -> Self {
+        Self {
+            inner,
+            sa: sa.clone(),
+        }
+    }
+}
+
 #[async_trait]
-impl<T> Listener for SimpleListener<T>
+impl<T> Listener for SimpleAnalyticsListener<T>
 where
     T: Listener + Send + Unpin + 'static,
     T::Acceptor: Acceptor + Send + Unpin + 'static,
 {
-    type Acceptor = SimpleAcceptor<T::Acceptor>;
+    type Acceptor = SimpleAnalyticsAcceptor<T::Acceptor>;
 
     async fn try_bind(self) -> IoResult<Self::Acceptor> {
         let bound = self.inner.try_bind().await?;
-        Ok(SimpleAcceptor {
+        Ok(SimpleAnalyticsAcceptor {
             inner: bound,
             sa: self.sa.clone(),
         })
     }
 }
 
-pub struct SimpleAcceptor<T> {
+pub struct SimpleAnalyticsAcceptor<T> {
     inner: T,
     sa: SimpleAnalytics,
 }
 
 #[async_trait]
-impl<T> Acceptor for SimpleAcceptor<T>
+impl<T> Acceptor for SimpleAnalyticsAcceptor<T>
 where
     T: Acceptor + Send + Unpin + 'static,
     T::Conn: HttpConnection + AsyncRead + AsyncWrite + Send + Unpin + 'static,
 {
-    type Conn = SimpleStream<T::Conn>;
+    type Conn = SimpleAnalyticsStream<T::Conn>;
 
     #[inline]
     fn holdings(&self) -> &[Holding] {
@@ -71,7 +80,7 @@ where
             )
             .await;
 
-        Ok(accepted.map_conn(|conn| SimpleStream {
+        Ok(accepted.map_conn(|conn| SimpleAnalyticsStream {
             inner: conn,
             conn_id: reported_conn.ok().map(|id| id),
         }))
@@ -79,13 +88,13 @@ where
 }
 
 #[pin_project]
-pub struct SimpleStream<T> {
+pub struct SimpleAnalyticsStream<T> {
     #[pin]
     inner: T,
     conn_id: Option<ChronoId>,
 }
 
-impl<T> AsyncRead for SimpleStream<T>
+impl<T> AsyncRead for SimpleAnalyticsStream<T>
 where
     T: AsyncRead + Send + Unpin + 'static,
 {
@@ -99,7 +108,7 @@ where
     }
 }
 
-impl<T> AsyncWrite for SimpleStream<T>
+impl<T> AsyncWrite for SimpleAnalyticsStream<T>
 where
     T: AsyncWrite + Send + Unpin + 'static,
 {
@@ -120,7 +129,7 @@ where
 }
 
 #[async_trait]
-impl<T> HttpConnection for SimpleStream<T>
+impl<T> HttpConnection for SimpleAnalyticsStream<T>
 where
     T: HttpConnection + AsyncRead + AsyncWrite + Unpin + Send + 'static,
 {
