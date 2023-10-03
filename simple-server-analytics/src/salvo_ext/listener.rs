@@ -42,16 +42,21 @@ where
 
     async fn try_bind(self) -> IoResult<Self::Acceptor> {
         let bound = self.inner.try_bind().await?;
-        Ok(SimpleAnalyticsAcceptor {
-            inner: bound,
-            sa: self.sa.clone(),
-        })
+        Ok(SimpleAnalyticsAcceptor::new(bound, &self.sa))
     }
 }
 
 pub struct SimpleAnalyticsAcceptor<T> {
     inner: T,
     sa: SimpleAnalytics,
+}
+impl<T> SimpleAnalyticsAcceptor<T> {
+    pub fn new(inner: T, sa: &SimpleAnalytics) -> Self {
+        Self {
+            inner,
+            sa: sa.clone(),
+        }
+    }
 }
 
 #[async_trait]
@@ -80,10 +85,8 @@ where
             )
             .await;
 
-        Ok(accepted.map_conn(|conn| SimpleAnalyticsStream {
-            inner: conn,
-            conn_id: reported_conn.ok().map(|id| id),
-        }))
+        Ok(accepted
+            .map_conn(|conn| SimpleAnalyticsStream::new(conn, reported_conn.ok().map(|id| id))))
     }
 }
 
@@ -92,6 +95,12 @@ pub struct SimpleAnalyticsStream<T> {
     #[pin]
     inner: T,
     conn_id: Option<ChronoId>,
+}
+
+impl<T> SimpleAnalyticsStream<T> {
+    pub fn new(inner: T, conn_id: Option<ChronoId>) -> Self {
+        Self { inner, conn_id }
+    }
 }
 
 impl<T> AsyncRead for SimpleAnalyticsStream<T>
