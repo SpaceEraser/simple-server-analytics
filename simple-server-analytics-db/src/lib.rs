@@ -286,7 +286,7 @@ impl ResponseTable {
 
         sqlx::query(
             "
-            INSERT INTO sa_request (
+            INSERT INTO sa_response (
                 id,
                 created_at,
                 conn_id,
