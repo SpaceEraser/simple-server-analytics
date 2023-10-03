@@ -227,7 +227,7 @@ impl RequestTable {
                 method,
                 path,
                 hostname,
-                user_agent,
+                user_agent
             ) VALUES (?, ?, ?, ?, ?, ?, ?)
         ",
         )

@@ -65,7 +65,7 @@ impl Handler for SimpleAnalyticsHandler {
                 .await;
 
             if let Err(ref e) = res_id {
-                error!("Failed to report request: {e:?}");
+                error!("Failed to report response: {e:?}");
             }
         }
     }
