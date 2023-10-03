@@ -1,0 +1,20 @@
+[package]
+edition = "2021"
+name = "simple-server-analytics-db"
+version = "0.0.1"
+
+[dependencies]
+anyhow = { version = "1", features = ["backtrace"] }
+chrono = { version = "0", features = ["serde"] }
+derive_more = "0"
+http = "0"
+serde = { version = "1", features = ["derive"] }
+sqlx = { version = "0", features = [
+    "chrono",
+    "runtime-tokio-rustls",
+    "sqlite",
+] }
+tracing = "0"
+zstd = "0"
+
+simple-id = { workspace = true }

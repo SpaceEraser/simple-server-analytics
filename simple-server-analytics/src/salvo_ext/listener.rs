@@ -10,12 +10,17 @@ use salvo::core::HyperHandler;
 use salvo::http::{uri::Scheme, HttpConnection};
 use salvo::hyper::Version;
 use salvo::{async_trait, Listener};
-use simple_id::random_id::Id as RandomId;
+use simple_id::chrono_id::Id as ChronoId;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio_util::sync::CancellationToken;
 
+use crate::SimpleAnalytics;
+
+use super::service::SimpleAnalyticsService;
+
 pub struct SimpleListener<T> {
     inner: T,
+    sa: SimpleAnalytics,
 }
 
 #[async_trait]
@@ -28,12 +33,16 @@ where
 
     async fn try_bind(self) -> IoResult<Self::Acceptor> {
         let bound = self.inner.try_bind().await?;
-        Ok(SimpleAcceptor { inner: bound })
+        Ok(SimpleAcceptor {
+            inner: bound,
+            sa: self.sa.clone(),
+        })
     }
 }
 
 pub struct SimpleAcceptor<T> {
     inner: T,
+    sa: SimpleAnalytics,
 }
 
 #[async_trait]
@@ -52,17 +61,19 @@ where
     #[inline]
     async fn accept(&mut self) -> IoResult<Accepted<Self::Conn>> {
         let accepted = self.inner.accept().await?;
-        let conn_info = ConnectionInfo {
-            id: RandomId::new(),
-            local_addr: accepted.local_addr.clone(),
-            remote_addr: accepted.remote_addr.clone(),
-            http_scheme: accepted.http_scheme.clone(),
-            http_version: accepted.http_version,
-        };
+        let reported_conn = self
+            .sa
+            .report_new_connection(
+                &accepted.local_addr.clone().into_std().unwrap(),
+                &accepted.remote_addr.clone().into_std().unwrap(),
+                &accepted.http_scheme,
+                &accepted.http_version,
+            )
+            .await;
 
         Ok(accepted.map_conn(|conn| SimpleStream {
             inner: conn,
-            conn_info,
+            conn_id: reported_conn.ok().map(|id| id),
         }))
     }
 }
@@ -71,13 +82,7 @@ where
 pub struct SimpleStream<T> {
     #[pin]
     inner: T,
-    conn_info: ConnectionInfo,
-}
-
-impl<T> SimpleStream<T> {
-    pub fn new(inner: T, conn_info: ConnectionInfo) -> Self {
-        Self { inner, conn_info }
-    }
+    conn_id: Option<ChronoId>,
 }
 
 impl<T> AsyncRead for SimpleStream<T>
@@ -126,7 +131,7 @@ where
         server_shutdown_token: CancellationToken,
         idle_connection_timeout: Option<Duration>,
     ) -> IoResult<()> {
-        let service = super::service::ConnIdService::new(handler, self.conn_info.id);
+        let service = SimpleAnalyticsService::new(handler, self.conn_id);
 
         builder
             .serve_connection(
@@ -142,7 +147,7 @@ where
 
 #[derive(Debug, Clone)]
 pub struct ConnectionInfo {
-    pub id: RandomId,
+    pub id: ChronoId,
     pub local_addr: SocketAddr,
     pub remote_addr: SocketAddr,
     pub http_scheme: Scheme,
